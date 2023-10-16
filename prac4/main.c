@@ -51,7 +51,8 @@ DMA_HandleTypeDef hdma_tim2_ch1;
 
 /* USER CODE BEGIN PV */
 // TODO: Add code for global variables, including LUTs
-
+volatile uint32_t button_press_time = 0;
+const uint32_t DEBOUNCE_DELAY = 100;
 uint32_t Sin_LUT[NS] = {500, 525, 549, 574, 598, 622, 646, 670, 693, 715, 737, 759, 780, 800, 819, 838, 856, 873, 889, 904, 918, 931, 943, 954, 964, 972, 980, 986, 991, 995, 998, 1000, 1000, 999, 997, 994, 989, 983, 976, 968, 959, 949, 937, 925, 911, 896, 881, 864, 847, 829, 810, 790, 769, 748, 726, 704, 681, 658, 634, 610, 586, 562, 537, 512, 488, 463, 438, 414, 390, 366, 342, 319, 296, 274, 252, 231, 210, 190, 171, 153, 136, 119, 104, 89, 75, 63, 51, 41, 32, 24, 17, 11, 6, 3, 1, 0, 0, 2, 5, 9, 14, 20, 28, 36, 46, 57, 69, 82, 96, 111, 127, 144, 162, 181, 200, 220, 241, 263, 285, 307, 330, 354, 378, 402, 426, 451, 475, 500};
 
 uint32_t saw_LUT[NS] = {500, 508, 516, 524, 531, 539, 547, 555, 563, 571, 579, 587, 594, 602, 610, 618, 626, 634, 642, 650, 657, 665, 673, 681, 689, 697, 705, 713, 720, 728, 736, 744, 752, 760, 768, 776, 783, 791, 799, 807, 815, 823, 831, 839, 846, 854, 862, 870, 878, 886, 894, 902, 909, 917, 925, 933, 941, 949, 957, 965, 972, 980, 988, 996, 4, 12, 20, 28, 35, 43, 51, 59, 67, 75, 83, 91, 98, 106, 114, 122, 130, 138, 146, 154, 161, 169, 177, 185, 193, 201, 209, 217, 224, 232, 240, 248, 256, 264, 272, 280, 287, 295, 303, 311, 319, 327, 335, 343, 350, 358, 366, 374, 382, 390, 398, 406, 413, 421, 429, 437, 445, 453, 461, 469, 476, 484, 492, 500};
@@ -360,10 +361,52 @@ static void MX_GPIO_Init(void)
 void EXTI0_1_IRQHandler(void)
 {
 	// TODO: Debounce using HAL_GetTick()
+	uint32_t current_time = HAL_GetTick();
+	  if (current_time - button_press_time < DEBOUNCE_DELAY)
+	  {
+	    // Ignore the button press due to debouncing
+	    return;
+	  }
 
+	  button_press_time = current_time;
 
 	// TODO: Disable DMA transfer and abort IT, then start DMA in IT mode with new LUT and re-enable transfer
 	// HINT: Consider using C's "switch" function to handle LUT changes
+	  __HAL_TIM_DISABLE_DMA(&htim2, TIM_DMA_CC1);
+	    HAL_DMA_Abort_IT(&hdma_tim2_ch1);
+	    // Change waveform type and update DMA source address
+	      static uint8_t waveform_type = 0;
+	      waveform_type = (waveform_type + 1) % 3;
+
+	      switch (waveform_type)
+	      {
+	        case 0:
+	          // Update DMA source address for Sine wave LUT
+	          HAL_DMA_Init(&hdma_tim2_ch1);
+	          HAL_DMA_Start_IT(&hdma_tim2_ch1, (uint32_t)&Sin_LUT, (uint32_t)DestAddress, NS);
+	          lcd_command(CLEAR);
+	          lcd_putstring("Sine");
+	          break;
+
+	        case 1:
+	          // Update DMA source address for Sawtooth wave LUT
+	          HAL_DMA_Init(&hdma_tim2_ch1);
+	          HAL_DMA_Start_IT(&hdma_tim2_ch1, (uint32_t)&saw_LUT, (uint32_t)DestAddress, NS);
+	          lcd_command(CLEAR);
+	          lcd_putstring("Sawtooth");
+	          break;
+
+	        case 2:
+	          // Update DMA source address for Triangular wave LUT
+	          HAL_DMA_Init(&hdma_tim2_ch1);
+	          HAL_DMA_Start_IT(&hdma_tim2_ch1, (uint32_t)&triangle_LUT, (uint32_t)DestAddress, NS);
+	          lcd_command(CLEAR);
+	          lcd_putstring("Triangular");
+	          break;
+	      }
+
+	      // Re-enable DMA transfer
+	      __HAL_TIM_ENABLE_DMA(&htim2, TIM_DMA_CC1);
 
 
 
