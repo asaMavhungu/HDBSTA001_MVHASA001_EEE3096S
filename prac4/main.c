@@ -36,7 +36,7 @@
 // TODO: Add values for below variables
 #define NS 128       // Number of samples in LUT
 #define TIM2CLK 8000000  // STM Clock frequency
-#define F_SIGNAL 10000 // Frequency of output analog signal
+#define F_SIGNAL 50 // Frequency of output analog signal
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -60,7 +60,7 @@ uint32_t saw_LUT[NS] = {512, 520, 528, 536, 544, 552, 560, 568, 576, 584, 592, 6
 uint32_t triangle_LUT[NS] = {512, 528, 544, 560, 576, 592, 608, 624, 640, 656, 673, 689, 705, 721, 737, 753, 769, 785, 801, 818, 834, 850, 866, 882, 898, 914, 930, 946, 963, 979, 995, 1011, 1019, 1003, 987, 971, 955, 938, 922, 906, 890, 874, 858, 842, 826, 810, 793, 777, 761, 745, 729, 713, 697, 681, 665, 648, 632, 616, 600, 584, 568, 552, 536, 520, 503, 487, 471, 455, 439, 423, 407, 391, 375, 358, 342, 326, 310, 294, 278, 262, 246, 230, 213, 197, 181, 165, 149, 133, 117, 101, 85, 68, 52, 36, 20, 4, 12, 28, 44, 60, 77, 93, 109, 125, 141, 157, 173, 189, 205, 222, 238, 254, 270, 286, 302, 318, 334, 350, 367, 383, 399, 415, 431, 447, 463, 479, 495, 512};
 
 // TODO: Equation to calculate TIM2_Ticks
-uint32_t TIM2_Ticks = ((TIM2CLK/F_SIGNAL*NS)); // How often to write new LUT value
+uint32_t TIM2_Ticks = (TIM2CLK/(F_SIGNAL*NS)); // How often to write new LUT value
 uint32_t DestAddress = (uint32_t) &(TIM3->CCR3); // Write LUT TO TIM3->CCR3 to modify PWM duty cycle
 
 /* USER CODE END PV */
