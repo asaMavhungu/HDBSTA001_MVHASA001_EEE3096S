@@ -51,13 +51,13 @@ DMA_HandleTypeDef hdma_tim2_ch1;
 
 /* USER CODE BEGIN PV */
 // TODO: Add code for global variables, including LUTs
+volatile uint32_t button_press_time = 0;
+const uint32_t DEBOUNCE_DELAY = 100;
+uint32_t Sin_LUT[NS] = {500, 525, 549, 574, 598, 622, 646, 670, 693, 715, 737, 759, 780, 800, 819, 838, 856, 873, 889, 904, 918, 931, 943, 954, 964, 972, 980, 986, 991, 995, 998, 1000, 1000, 999, 997, 994, 989, 983, 976, 968, 959, 949, 937, 925, 911, 896, 881, 864, 847, 829, 810, 790, 769, 748, 726, 704, 681, 658, 634, 610, 586, 562, 537, 512, 488, 463, 438, 414, 390, 366, 342, 319, 296, 274, 252, 231, 210, 190, 171, 153, 136, 119, 104, 89, 75, 63, 51, 41, 32, 24, 17, 11, 6, 3, 1, 0, 0, 2, 5, 9, 14, 20, 28, 36, 46, 57, 69, 82, 96, 111, 127, 144, 162, 181, 200, 220, 241, 263, 285, 307, 330, 354, 378, 402, 426, 451, 475, 500};
 
-uint32_t Sin_LUT[NS] = {512, 537, 562, 587, 612, 637, 661, 685, 709, 732, 754, 776, 798, 818, 838, 857, 875, 893, 909, 925, 939, 952, 965, 976, 986, 995, 1002, 1009, 1014, 1018, 1021, 1023, 1023, 1022, 1020, 1016, 1012, 1006, 999, 990, 981, 970, 959, 946, 932, 917, 901, 884, 866, 848, 828, 808, 787, 765, 743, 720, 697, 673, 649, 624, 600, 575, 549, 524, 499, 474, 448, 423, 399, 374, 350, 326, 303, 280, 258, 236, 215, 195, 175, 157, 139, 122, 106, 91, 77, 64, 53, 42, 33, 24, 17, 11, 7, 3, 1, 0, 0, 2, 5, 9, 14, 21, 28, 37, 47, 58, 71, 84, 98, 114, 130, 148, 166, 185, 205, 225, 247, 269, 291, 314, 338, 362, 386, 411, 436, 461, 486, 511};
+uint32_t saw_LUT[NS] = {500, 508, 516, 524, 531, 539, 547, 555, 563, 571, 579, 587, 594, 602, 610, 618, 626, 634, 642, 650, 657, 665, 673, 681, 689, 697, 705, 713, 720, 728, 736, 744, 752, 760, 768, 776, 783, 791, 799, 807, 815, 823, 831, 839, 846, 854, 862, 870, 878, 886, 894, 902, 909, 917, 925, 933, 941, 949, 957, 965, 972, 980, 988, 996, 4, 12, 20, 28, 35, 43, 51, 59, 67, 75, 83, 91, 98, 106, 114, 122, 130, 138, 146, 154, 161, 169, 177, 185, 193, 201, 209, 217, 224, 232, 240, 248, 256, 264, 272, 280, 287, 295, 303, 311, 319, 327, 335, 343, 350, 358, 366, 374, 382, 390, 398, 406, 413, 421, 429, 437, 445, 453, 461, 469, 476, 484, 492, 500};
 
-uint32_t saw_LUT[NS] = {512, 520, 528, 536, 544, 552, 560, 568, 576, 584, 592, 600, 608, 616, 624, 632, 640, 648, 656, 665, 673, 681, 689, 697, 705, 713, 721, 729, 737, 745, 753, 761, 769, 777, 785, 793, 801, 810, 818, 826, 834, 842, 850, 858, 866, 874, 882, 890, 898, 906, 914, 922, 930, 938, 946, 955, 963, 971, 979, 987, 995, 1003, 1011, 1019, 4, 12, 20, 28, 36, 44, 52, 60, 68, 77, 85, 93, 101, 109, 117, 125, 133, 141, 149, 157, 165, 173, 181, 189, 197, 205, 213, 222, 230, 238, 246, 254, 262, 270, 278, 286, 294, 302, 310, 318, 326, 334, 342, 350, 358, 367, 375, 383, 391, 399, 407, 415, 423, 431, 439, 447, 455, 463, 471, 479, 487, 495, 503, 512};
-
-uint32_t triangle_LUT[NS] = {512, 528, 544, 560, 576, 592, 608, 624, 640, 656, 673, 689, 705, 721, 737, 753, 769, 785, 801, 818, 834, 850, 866, 882, 898, 914, 930, 946, 963, 979, 995, 1011, 1019, 1003, 987, 971, 955, 938, 922, 906, 890, 874, 858, 842, 826, 810, 793, 777, 761, 745, 729, 713, 697, 681, 665, 648, 632, 616, 600, 584, 568, 552, 536, 520, 503, 487, 471, 455, 439, 423, 407, 391, 375, 358, 342, 326, 310, 294, 278, 262, 246, 230, 213, 197, 181, 165, 149, 133, 117, 101, 85, 68, 52, 36, 20, 4, 12, 28, 44, 60, 77, 93, 109, 125, 141, 157, 173, 189, 205, 222, 238, 254, 270, 286, 302, 318, 334, 350, 367, 383, 399, 415, 431, 447, 463, 479, 495, 512};
-
+uint32_t triangle_LUT[NS] = {500, 516, 531, 547, 563, 579, 594, 610, 626, 642, 657, 673, 689, 705, 720, 736, 752, 768, 783, 799, 815, 831, 846, 862, 878, 894, 909, 925, 941, 957, 972, 988, 996, 980, 965, 949, 933, 917, 902, 886, 870, 854, 839, 823, 807, 791, 776, 760, 744, 728, 713, 697, 681, 665, 650, 634, 618, 602, 587, 571, 555, 539, 524, 508, 492, 476, 461, 445, 429, 413, 398, 382, 366, 350, 335, 319, 303, 287, 272, 256, 240, 224, 209, 193, 177, 161, 146, 130, 114, 98, 83, 67, 51, 35, 20, 4, 12, 28, 43, 59, 75, 91, 106, 122, 138, 154, 169, 185, 201, 217, 232, 248, 264, 280, 295, 311, 327, 343, 358, 374, 390, 406, 421, 437, 453, 469, 484, 500};
 
 // TODO: Equation to calculate TIM2_Ticks
 uint32_t TIM2_Ticks = ((TIM2CLK/F_SIGNAL*NS)); // How often to write new LUT value
@@ -113,19 +113,29 @@ int main(void)
 
   /* USER CODE BEGIN 2 */
   // TODO: Start TIM3 in PWM mode on channel 3
-
+  if (HAL_TIM_PWM_Start(&htim3, TIM_CHANNEL_3) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   // TODO: Start TIM2 in Output Compare (OC) mode on channel 1.
-
+  if (HAL_TIM_OC_Start(&htim2, TIM_CHANNEL_1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   // TODO: Start DMA in IT mode on TIM2->CH1; Source is LUT and Dest is TIM3->CCR3; start with Sine LUT
-
+  if (HAL_DMA_Start_IT(&hdma_tim2_ch1, (uint32_t)&Sin_LUT, (uint32_t)DestAddress, NS) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   // TODO: Write current waveform to LCD ("Sine")
+  lcd_putstring("Sine");
   delay(3000);
 
   // TODO: Enable DMA (start transfer from LUT to CCR)
-
+  __HAL_TIM_ENABLE_DMA(&htim2, TIM_DMA_CC1);
 
   /* USER CODE END 2 */
 
@@ -351,10 +361,52 @@ static void MX_GPIO_Init(void)
 void EXTI0_1_IRQHandler(void)
 {
 	// TODO: Debounce using HAL_GetTick()
+	uint32_t current_time = HAL_GetTick();
+	  if (current_time - button_press_time < DEBOUNCE_DELAY)
+	  {
+	    // Ignore the button press due to debouncing
+	    return;
+	  }
 
+	  button_press_time = current_time;
 
 	// TODO: Disable DMA transfer and abort IT, then start DMA in IT mode with new LUT and re-enable transfer
 	// HINT: Consider using C's "switch" function to handle LUT changes
+	  __HAL_TIM_DISABLE_DMA(&htim2, TIM_DMA_CC1);
+	    HAL_DMA_Abort_IT(&hdma_tim2_ch1);
+	    // Change waveform type and update DMA source address
+	      static uint8_t waveform_type = 0;
+	      waveform_type = (waveform_type + 1) % 3;
+
+	      switch (waveform_type)
+	      {
+	        case 0:
+	          // Update DMA source address for Sine wave LUT
+	          HAL_DMA_Init(&hdma_tim2_ch1);
+	          HAL_DMA_Start_IT(&hdma_tim2_ch1, (uint32_t)&Sin_LUT, (uint32_t)DestAddress, NS);
+	          lcd_command(CLEAR);
+	          lcd_putstring("Sine");
+	          break;
+
+	        case 1:
+	          // Update DMA source address for Sawtooth wave LUT
+	          HAL_DMA_Init(&hdma_tim2_ch1);
+	          HAL_DMA_Start_IT(&hdma_tim2_ch1, (uint32_t)&saw_LUT, (uint32_t)DestAddress, NS);
+	          lcd_command(CLEAR);
+	          lcd_putstring("Sawtooth");
+	          break;
+
+	        case 2:
+	          // Update DMA source address for Triangular wave LUT
+	          HAL_DMA_Init(&hdma_tim2_ch1);
+	          HAL_DMA_Start_IT(&hdma_tim2_ch1, (uint32_t)&triangle_LUT, (uint32_t)DestAddress, NS);
+	          lcd_command(CLEAR);
+	          lcd_putstring("Triangular");
+	          break;
+	      }
+
+	      // Re-enable DMA transfer
+	      __HAL_TIM_ENABLE_DMA(&htim2, TIM_DMA_CC1);
 
 
 
